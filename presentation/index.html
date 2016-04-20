@@ -1,0 +1,199 @@
+<!doctype html>
+<html>
+    <head>
+        <title></title>
+        <script src=jquery.min.js></script>
+        <style>
+/*
+            @font-face {
+                font-family: 'Work Sans';
+                font-style: normal;
+                font-weight: 300;
+                src: local('Work Sans Light'), local('WorkSans-Light'), url(WorkSansLight.woff2) format('woff2');
+            }
+            @font-face {
+                font-family: 'Work Sans';
+                font-style: normal;
+                font-weight: 400;
+                src: local('Work Sans'), local('WorkSans-Regular'), url(WorkSans.woff2) format('woff2');
+            }
+            @font-face {
+                font-family: 'Work Sans';
+                font-style: normal;
+                font-weight: 600;
+                src: local('Work Sans SemiBold'), local('WorkSans-SemiBold'), url(WorkSansSemiBold.woff2) format('woff2');
+            }
+            @font-face {
+                font-family: 'Work Sans';
+                font-style: normal;
+                font-weight: 700;
+                src: local('Work Sans Bold'), local('WorkSans-Bold'), url(WorkSansBold.woff2) format('woff2');
+            } */
+
+            body {
+                margin: 0;
+                padding: 0;
+                overflow: hidden;
+            }
+            svg {
+                display: block;
+            }
+            video {
+                left: 0;
+                top: 0;
+                background: black;
+                width: 60vw;
+                width: 100vw;
+                position: absolute;
+                z-index: 1200;
+                display: none;
+                border:0 none;
+            }
+            #infobutton{
+                position:fixed;
+                bottom: 10px;
+                right: 10px;
+                z-index: 1000;
+            }
+            #notesoverlay{
+                margin: 0 auto;
+                width: calc(16 / 9 * 100vh);
+                max-width: 100vw;
+                display: none;
+            }
+            #notesoverlay>div{
+                position: absolute;
+                font-family: helvetica;
+                padding: 30px;
+                box-sizing: border-box;
+                min-height: 100vh;
+                width: calc(16 / 9 * 100vh);
+                max-width: calc(100vw);
+                /*margin-left: calc((100vw - 16 / 9 * 100vh) / 2);*/
+                line-height: 1.5em;
+                background: rgba(255,255,255,0.9);
+            }
+            #infobutton:hover ~ #notesoverlay{
+                display: block;
+            }
+            flowpara{display: block;min-height:15px;}
+            .crisp{
+                image-rendering: crisp-edges !important; 
+                image-rendering: -moz-crisp-edges !important; 
+                image-rendering: -webkit-optimize-contrast !important; 
+            }
+        </style>
+    </head>
+    <body>
+        <svg id=infobutton width=30 height=30>
+        <path
+            style="fill:#b3b3b3"
+            id="path11725"
+            d="M 15.083984,0 C 6.7538635,-5.5559997e-4 5.2299997e-4,6.7519102 0,15.082031 5.2299997e-4,23.412153 6.7538635,30.164618 15.083984,30.164062 23.413343,30.163542 30.165493,23.41139 30.166016,15.082031 30.165493,6.7526732 23.413343,5.2299997e-4 15.083984,0 Z m -0.988281,4.6875 2.960938,0 0,2.9765625 -2.960938,0 0,-2.9765625 z m -2.978515,5.939453 5.55664,0 0,12.974609 3.34375,0 0,1.863282 -8.90039,0 0,-1.863282 3.359374,0 0,-11.113281 -3.359374,0 0,-1.861328 z" />
+        </svg>
+        <div id="notesoverlay"><div></div></div>
+        <script>
+            var currentSlide = 1;
+
+            function newWinText(notes) {
+                return '<!doctype html><html><style>flowpara{display: block;min-height:15px}body{font-family:helvetica;font-size:18px;line-height:1.35em;}</style><body>' + notes + '</body></html>'
+            }
+
+            function hashTriggered() {
+
+                $('#osvg svg>g[zinx=currentSlide]').removeAttr("zinx").hide();
+                var currentSlideSelector
+                if (window.location.hash.length)
+                    currentSlideSelector = window.location.hash
+                else
+                    currentSlideSelector = "#osvg svg>g:last"
+
+                $(currentSlideSelector).attr("zinx", "currentSlide").show();
+                $('title').html($(currentSlideSelector).attr("inkscape:label"));
+
+                if ($('#osvg svg>g[zinx=currentSlide] .notes').length) {
+                    $('#notesoverlay>div').html($('#osvg svg>g[zinx=currentSlide] .notes').html());
+                    $('#infobutton').show();
+                } else {
+                    $('#notesoverlay>div').html("");
+                    $('#infobutton').hide();
+                }
+
+                if (typeof newwin == "object") {
+                    if ($('#osvg svg>g[zinx=currentSlide] .notes').length) {
+                        $(newwin.document).find("body").html($('#osvg svg>g[zinx=currentSlide] .notes').html());
+                    } else {
+                        $(newwin.document).find("body").html("");
+                    }
+                }
+
+                //if there's an element with id video in this slide, show the actual html video
+                //this is a workaround until it's possible to add videos to the svg in inkscape
+                if ($(currentSlideSelector).find("#video").length) {
+                    $("video").show();
+                } else {
+                    $("video").hide();
+                }
+                $(currentSlideSelector).find("[data-surrogate-of]").each(function () {
+                    $(this).replaceWith("<foreignObject>" + $(this).attr("data-surrogate-of") + "</foreignObject>");
+                });
+                
+            }
+
+            $(document).ready(function () {
+                $('#osvg').load('fosscomm16.svg', function () {
+                    //$('g').css('display','')
+                    $('#osvg svg>g:not(.master)').hide()
+                    $('#osvg svg').css({width: "100vw", height: "100vh"})
+                    $('#osvg svg').attr("width", "100")
+                    $('#osvg svg').attr("height", "108")
+                    $("#osvg svg>g:last").attr("zinx", "currentSlide")
+                    hashTriggered()
+                    //$('#osvg svg')[0].setAttribute('viewBox','0 0 1280 800')
+                    //$('#slide').attr('viewBox', $('#osvg svg')[0].getAttribute('viewBox'));
+                })
+                window.onhashchange = hashTriggered
+                $(window).keydown(function (e) {
+                      if ((e.keyCode == 13 || e.keyCode == 39) && $('#osvg svg>g[zinx=currentSlide]').prev("g").length) {
+                          window.location.hash = ($('#osvg svg>g[zinx=currentSlide]').prev("g").attr("id"));
+                          //history.pushState(null, $('#osvg svg>g[zinx=currentSlide]').attr("inkscape:label"), $('#osvg svg>g[zinx=currentSlide]').removeAttr("zinx").hide().prev("g").attr("zinx","currentSlide").show().attr("id"));
+                      } else if (e.keyCode == 37 && $('#osvg svg>g[zinx=currentSlide]').next("g").length) { //|| e.keyCode == 8
+                          window.location.hash = ($('#osvg svg>g[zinx=currentSlide]').next("g").attr("id"));
+                          //$('#osvg svg>g[zinx=currentSlide]').removeAttr("zinx").hide().next("g").attr("zinx","currentSlide").show();
+                      } else if (e.keyCode == 78) {
+                          if (typeof newwin != "object") {
+                              //open a window to display notes
+                              newwin = window.open("about:blank", "zinx_notes", "width=500,height=500,location=no");
+                              //todo named page
+                              //todo no url in popup
+                              if ($('#osvg svg>g[zinx=currentSlide] .notes').length)
+                                  notes = $('#osvg svg>g[zinx=currentSlide] .notes').html()
+                              else
+                                  notes = ""
+
+                              newwin.document.write(newWinText(notes));
+                          } else {
+                              newwin.close();
+                              delete newwin;
+                          }
+
+                      }
+                })
+                //Fullscreen on F key press
+                $('html').keydown(function (e) {
+                    if (e.which == 70)
+                        document.documentElement.mozRequestFullScreen()
+                })
+                $("body").click(function () {
+                    window.location.hash = ($('#osvg svg>g[zinx=currentSlide]').prev("g").attr("id"));
+                })
+//			$(window).scroll(function(){
+//				if ($('#osvg svg>g[zinx=currentSlide]').prev("g").length){
+//					window.location.hash=($('#osvg svg>g[zinx=currentSlide]').prev("g").attr("id"));
+//				}
+//			})
+            })
+        </script>
+        <div id="osvg" ></div>
+    </body>
+</html>
